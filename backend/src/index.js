@@ -8,7 +8,9 @@ import authRoutes from "./routes/auth.route.js";
 dotenv.config();
 const app = express();
 
-const PORT = process.env.PORT
+const PORT = process.env.PORT;
+
+app.use(express.json()); //MiddleWare to extract json data out of BODy
 
 app.use("/api/auth", authRoutes);
 
