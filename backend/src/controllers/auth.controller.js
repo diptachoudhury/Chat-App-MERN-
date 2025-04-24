@@ -11,7 +11,7 @@ try {
     if(!fullName || !email || !password) {
         return res.status(400).json({ message: "All fields are required"})
     }
-    
+
   if (password.length < 6) {
     return res.status(400).json({ message: "Password should be atleast 9 characters"})
   } 
@@ -52,15 +52,72 @@ if (newUser) {
 }
 }
 
+export const login = async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(400).json({ message: "Inavlid Credentials" });
+        }
+
+        const isPaswordCorrect = await bcrypt.compare( password, user.password);
+        if(!isPaswordCorrect){
+            return res.status(400).json({ message: "Invalid credentials" });
+        }
+
+        generateToken(user._id, res);
+      
+        res.status(200).json({
+            _id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            profilePic: user.profilePic
+        })
 
 
-
-
-
-export const login = (req, res) => {
-    res.send("login route");
+    } catch (error){
+        console.log("Error in login controller", error.message);
+        res.status(500).json({ message: "Internal Server Error"});
+     }
 }
+
+
 export const logout = (req, res) => {
-    res.send("logout route");
+  try{
+    res.cookie("jwt", "", {maxAge:0})
+    res.status(200).json({message: "Logout Successful"})
+  }catch (error) {
+    console.log("Error in logout controller", error.message);
+    res.status(500).json({ message: "Internal Server Error"});
+  }
 }
 
+export const updateProfile = async (req, res) => {
+  try{
+    const { profilePic } = req.body;
+    const userId = req.user._id; // its coming from the middleware via next()
+
+    if(!profilePic){
+      res.status(400).json({message: "Profile pic is required"});
+    }
+
+   const uploadResponse =  await cloudinary.uploader.upload(profilePic);
+   const updatedUser = await User.findByIdAndUpdate(userId, { profilePic: uploadResponse.secure_url}, {new: true}) // findyByID doesnot return updated if now new:true
+
+   res.status(200).json(updatedUser)
+  }catch(error){
+    console.log("Error in login controller", error.message);
+    res.status(500).json({ message: "Internal Server Error"});
+  }
+
+}
+
+export const checkAuth = (req, res) =>{
+  try{
+    res.status(200).json(req.user);
+  }catch(error){
+    console.log("Error in CheckAuth controller", error.message);
+    res.status(500).json({ message: "Internal Server Error"});
+  }
+}

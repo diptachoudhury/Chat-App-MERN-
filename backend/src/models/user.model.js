@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema(
 );
 
 
-// const User = mongoose.model("User", userSchema); First character should be upperCase
+// const User = mongoose.model("User", userSchema); First character should be upperCase. It will be updated in users in db
 const User = mongoose.models.User || mongoose.model("User", userSchema); //Cannot overwrite User model once compiled err
 
 
